@@ -24,7 +24,6 @@ router.get("/search-results", async (req, res) => {
       posts: postResults,
     });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
@@ -44,7 +43,6 @@ router.get("/search-events/:query/:country", async (req, res) => {
 
     res.status(200).send(response.events_results);
   } catch (error) {
-    console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 

@@ -98,10 +98,8 @@ router.post(
         return res.status(404).send("User not found.");
       }
 
-      console.log(user);
       res.status(200).send(user);
     } catch (error) {
-      console.error("Error uploading profile picture:", error);
       res.status(500).send("Error uploading profile picture.");
     }
   }
@@ -131,21 +129,18 @@ router.post(
       );
 
       // Update the user's coverPicture field
-      console.log(_id);
       const user = await User.findByIdAndUpdate(
         _id,
         { coverPicture: newcoverPicture },
         { new: true }
       );
-      console.log(user);
+
       if (!user) {
         return res.status(404).send("User not found.");
       }
 
-      console.log(user);
       res.status(200).json(user);
     } catch (error) {
-      console.error("Error uploading cover picture:", error);
       res.status(500).send("Error uploading cover picture.");
     }
   }
@@ -174,7 +169,6 @@ router.post("/updateAbout", async (req, res) => {
 
     res.status(200).json(user);
   } catch (error) {
-    console.error("Error updating about:", error);
     res.status(500).send("Error updating about.");
   }
 });
@@ -196,10 +190,9 @@ router.post("/updateDesc", async (req, res) => {
     if (!user) {
       return res.status(404).send("User not found.");
     }
-    console.log(user);
+
     res.status(200).json(user);
   } catch (error) {
-    console.error("Error updating desc:", error);
     res.status(500).send("Error updating desc.");
   }
 });
@@ -225,7 +218,6 @@ router.delete("/:id", async function (req, res) {
 // get a user
 
 router.get("/", async function (req, res) {
-  // console.log(req.query);
   const username = req.query.username;
   const userId = req.query.userId;
   try {
@@ -279,7 +271,6 @@ router.post("/friend-request/:userId", async (req, res) => {
     await sender.save();
     res.status(200).json(sender);
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
@@ -303,7 +294,6 @@ router.post("/cancel-friend-request/:userId", async (req, res) => {
     const updatedSender = await User.findById(userId);
     return res.status(200).json(updatedSender);
   } catch (error) {
-    console.error(error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 });
@@ -348,7 +338,6 @@ router.post("/accept-friend-request/:userId", async (req, res) => {
     await friendUser.save();
     res.status(200).json(user);
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
@@ -387,7 +376,6 @@ router.post("/reject-friend-request/:userId", async (req, res) => {
 
     res.status(200).json(user);
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
@@ -408,7 +396,6 @@ router.post("/unfriend/:userId", async (req, res) => {
     const updatedUser = await User.findById(userId);
     return res.status(200).json(updatedUser);
   } catch (error) {
-    console.error(error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 });
@@ -416,7 +403,6 @@ router.post("/unfriend/:userId", async (req, res) => {
 // get user friend
 router.get("/friends/:userId", async (req, res) => {
   try {
-    console.log(req.params.userId);
     const user = await User.findById(req.params.userId, { friends: 1 });
 
     if (!user) {
@@ -433,11 +419,8 @@ router.get("/friends/:userId", async (req, res) => {
       })
     );
 
-    console.log(friendList);
-
     res.status(200).json(friendList);
   } catch (error) {
-    console.error("Error:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
@@ -449,7 +432,6 @@ router.get("/friendsuggestion", async (req, res) => {
     const users = await User.find({ _id: { $nin: dontSuggest } });
     res.json(users);
   } catch (error) {
-    console.error(error);
     res
       .status(500)
       .json({ error: "An error occurred while fetching friend suggestions." });
@@ -467,7 +449,6 @@ router.get("/notifications/:userId", async (req, res) => {
 
     res.status(200).json(user.notifications);
   } catch (error) {
-    console.error("Error retrieving notifications:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
@@ -497,7 +478,6 @@ router.patch(
 
       res.status(200).json(user.notifications);
     } catch (err) {
-      console.error(err);
       res.status(500).json({ error: "Internal server error" });
     }
   }
@@ -523,7 +503,6 @@ router.get("/mutual-friends/:userId1/:userId2", async (req, res) => {
 
     res.status(200).json(mutualFriends);
   } catch (error) {
-    console.error("Error fetching mutual friends:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
@@ -533,7 +512,7 @@ router.get("/mutual-friends/:userId1/:userId2", async (req, res) => {
 router.get("/search-friends/:userId/:username", async (req, res) => {
   try {
     const { userId, username } = req.params;
-    console.log(userId+" "+username);
+   
     // Ensure that the user exists
     const user = await User.findById(userId);
     if (!user) {
@@ -542,7 +521,6 @@ router.get("/search-friends/:userId/:username", async (req, res) => {
 
     // Search for friends whose username starts with the provided input
     const friendIds = user.friends;
-    console.log(friendIds);
 
     const users = await User.find({
       _id: { $in: friendIds },
@@ -551,7 +529,6 @@ router.get("/search-friends/:userId/:username", async (req, res) => {
 
     res.json(users);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });

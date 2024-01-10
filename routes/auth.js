@@ -66,7 +66,6 @@ router.post("/register", async (req, res) => {
       .status(201)
       .json({ message: "Verification OTP sent. Check your email." });
   } catch (error) {
-    console.error("Error registering user:", error);
     res
       .status(500)
       .json({ error: "An error occurred while registering the user." });
@@ -77,7 +76,6 @@ router.post("/register", async (req, res) => {
 router.post("/verify-otp", async (req, res) => {
   try {
     const { email, otp } = req.body;
-    console.log(email);
     // Check if the email and OTP match
     const existingUser = await User.findOne({
       "otpDetails.email": email,
@@ -103,7 +101,6 @@ router.post("/verify-otp", async (req, res) => {
 
     res.status(200).json({ message: "Email verified successfully." });
   } catch (error) {
-    console.error("Error verifying OTP:", error);
     res
       .status(500)
       .json({ error: "An error occurred while verifying the OTP." });
@@ -153,7 +150,6 @@ router.post("/resend-otp", async (req, res) => {
       .status(200)
       .json({ message: "New verification OTP sent. Check your email." });
   } catch (error) {
-    console.error("Error resending OTP:", error);
     res
       .status(500)
       .json({ error: "An error occurred while resending the OTP." });
@@ -210,7 +206,6 @@ router.post("/login", async (req, res) => {
     res.status(200).json(user);
   } catch (error) {
     res.status(500).json(error);
-    console.log(error);
   }
 });
 

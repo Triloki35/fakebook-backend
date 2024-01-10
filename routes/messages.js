@@ -19,9 +19,7 @@ router.post("/", upload.array("images", 5), async (req, res) => {
   try {
     const { conversationId, senderId, text } = req.body;
     const images = req.files.map((file) => {
-      console.log(file.path);
       const imgPath = file.path.replace(/\\/g, "/").replace("public/assets/", "");
-      console.log(imgPath);
       return imgPath;
     }); // Assuming you are using multer for file uploads
 
@@ -37,7 +35,6 @@ router.post("/", upload.array("images", 5), async (req, res) => {
     await newMessage.save();
     res.status(200).json(newMessage);
   } catch (error) {
-    console.log(error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
@@ -48,7 +45,6 @@ router.get("/:conversationId", async (req, res) => {
         const messages = await Message.find({ conversationId: req.params.conversationId });
         res.status(200).json(messages);
     } catch (error) {
-        console.log(error);
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
@@ -62,7 +58,6 @@ router.get("/:conversationId/last", async (req, res) => {
 
         res.status(200).json(lastMessage);
     } catch (error) {
-        console.log(error);
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
@@ -81,7 +76,6 @@ router.put("/:conversationId/seen", async (req, res) => {
 
         res.status(200).json({ updatedCount: updatedMessages.nModified });
     } catch (error) {
-        console.log(error);
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
@@ -115,7 +109,6 @@ router.put("/seenByText/:text", async (req, res) => {
             res.status(200).json("user and sender are the same.");
         }
     } catch (error) {
-        console.log(error);
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
@@ -136,7 +129,6 @@ router.get("/:messageId/seen", async (req, res) => {
       // Return the seen status of the message
       res.status(200).json({ seen: message.seen });
     } catch (error) {
-      console.error(error);
       res.status(500).json({ error: "Internal Server Error" });
     }
   });

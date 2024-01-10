@@ -1,0 +1,15 @@
+# .gitignore
+
+# Node.js
+node_modules/
+.env
+
+# Mac OS
+.DS_Store
+
+# Logs
+logs
+*.log
+
+# Render specific files
+render.yaml

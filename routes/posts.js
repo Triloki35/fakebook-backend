@@ -61,7 +61,6 @@ router.post("/", upload.single("image"), async (req, res) => {
 
     res.status(201).json(savedPost);
   } catch (error) {
-    console.error(error);
     res.status(500).send("Error saving the post.");
   }
 });
@@ -162,8 +161,6 @@ router.get("/profile/:username", async function (req, res) {
 router.put("/:id", async function (req, res) {
   try {
     const post = await Post.findById(req.params.id);
-    // console.log(post.userId);
-    // console.log(req.body.userId);
     if (post.userId === req.body.userId) {
       await post.updateOne({ $set: req.body });
       res.status(200).json("the post has been updated");
@@ -180,8 +177,7 @@ router.put("/:id", async function (req, res) {
 router.delete("/:id/:userId", async function (req, res) {
   try {
     const post = await Post.findById(req.params.id);
-    console.log(req.params.userId);
-    console.log(post.userId);
+
     if (post.userId === req.params.userId) {
       await post.deleteOne();
       res.status(200).json("the post has been deleted");
@@ -210,7 +206,6 @@ router.get("/check-bookmark/:userId/:postId", async function (req, res) {
 
     res.status(200).json({ isBookmarked });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
@@ -306,7 +301,6 @@ router.put("/:id/like", async function (req, res) {
       res.status(200).json({ message: "Post disliked", action: "disliked" });
     } 
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
@@ -318,7 +312,7 @@ router.get("/comments/:postId",async function(req,res){
     const post = await Post.findById(req.params.postId);
     res.status(200).json(post.comments);
   } catch (error) {
-    console.log(error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 })
 
@@ -372,7 +366,6 @@ router.post("/comments/:postId", async function (req, res) {
   
     res.status(201).json({ message: "Comment added successfully" });
   } catch (error) {
-    console.error("Error adding comment:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
@@ -422,7 +415,6 @@ router.delete("/comments/:postId/:commentId", async function (req, res) {
       res.status(403).json({ message: "Permission denied to delete the comment" });
     }
   } catch (error) {
-    console.error("Error deleting comment:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
@@ -446,7 +438,6 @@ router.get("/bookmarks/:userId", async (req, res) => {
 
     res.json(bookmarkedPosts);
   } catch (error) {
-    console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });

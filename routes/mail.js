@@ -46,18 +46,10 @@ router.post("/send-mail", upload.single("image"), async (req, res) => {
         },
       ],
     };
-    
-
     // Send email
     const info = await transporter.sendMail(message);
-
-    console.log("Message sent: %s", info.messageId);
-    // Preview only available when sending through an Ethereal account
-    console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
-
     res.status(200).json({ message: "Email sent successfully", info });
   } catch (error) {
-    console.error("Error occurred. " + error.message);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });

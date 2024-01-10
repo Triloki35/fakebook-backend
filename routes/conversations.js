@@ -12,7 +12,7 @@ router.post("/", async (req, res) => {
     const saveConversation = await newConversation.save();
     res.status(200).json(saveConversation);
   } catch (error) {
-    console.log(error);
+    res.status(500).json(error);
   }
 });
 
@@ -49,7 +49,6 @@ router.get("/:userId", async (req, res) => {
 
       res.status(200).json(sortedConversations);
   } catch (error) {
-      console.log(error);
       res.status(500).json({ error: "Internal Server Error" });
   }
 });
@@ -72,7 +71,7 @@ router.get("/find/:userId1/:userId2", async (req, res) => {
 
       res.status(200).json(conversation);
   } catch (error) {
-      console.log(error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
@@ -105,14 +104,12 @@ router.get("/unseen/:userId", async (req, res) => {
         });
       }
     }
-    console.log("...................................");
-    console.log(totalUnseenCount);
+  
     res.status(200).json({
       totalUnseenCount,
       unseenConversations,
     });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
