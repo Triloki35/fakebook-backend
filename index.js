@@ -47,6 +47,6 @@ app.use('/api/search', searchRouter);
 app.use('/api/mail', mailRoute);
 
 
-app.listen(8000,()=>{
+app.listen(process.env.PORT||8000,()=>{
     console.log("server is running");
 })
