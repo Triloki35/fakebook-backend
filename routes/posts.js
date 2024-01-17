@@ -67,6 +67,7 @@ router.post("/", upload.single("image"), async (req, res) => {
 
     res.status(201).json(savedPost);
   } catch (error) {
+    console.log(error);
     res.status(500).send("Error saving the post.");
   }
 });
