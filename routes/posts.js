@@ -21,13 +21,19 @@ const upload = multer({ storage });
 router.post("/", upload.single("image"), async (req, res) => {
   try {
     const { userId, username, profilePicture, desc, tags } = req.body;
-    const imgPath = req.file.path;
-    const img = imgPath.replace(/\\/g, "/").replace("public/assets/", "");
-    const parsedTags = tags.map((tag) => JSON.parse(tag));
+    
+    // Check if an image was uploaded
+    const imgPath = req.file ? req.file.path : null;
+    const img = imgPath ? imgPath.replace(/\\/g, "/").replace("public/assets/", "") : null;
+
+    // Check if tags are provided
+    const parsedTags = tags ? tags.map((tag) => JSON.parse(tag)) : [];
 
     // Create a new post in your MongoDB collection
     const newPost = new Post({
       userId,
+      username,
+      profilePicture,
       desc,
       img,
       tags: parsedTags,
@@ -64,8 +70,6 @@ router.post("/", upload.single("image"), async (req, res) => {
     res.status(500).send("Error saving the post.");
   }
 });
-
-
 
 // get a post
 
