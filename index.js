@@ -36,6 +36,7 @@ app.use(express.json());
 app.use(helmet());
 app.use(morgan("common"));
 app.use(cors());
+app.use('/public', express.static('public'));
 
 // routes
 app.use("/api/users",userRoute);

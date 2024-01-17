@@ -21,7 +21,8 @@ const upload = multer({ storage });
 router.post("/", upload.single("image"), async (req, res) => {
   try {
     const { userId, username, profilePicture, desc, tags } = req.body;
-    
+    console.log(req.body);
+    // console.log("username = " + username);
     // Check if an image was uploaded
     const imgPath = req.file ? req.file.path : null;
     const img = imgPath ? imgPath.replace(/\\/g, "/").replace("public/assets/", "") : null;
