@@ -5,14 +5,7 @@ const User = require("../models/User");
 const multer = require("multer");
 const path = require("path");
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "./public/assets/post");
-  }, // Set your desired upload folder
-  filename: function (req, file, cb) {
-    cb(null, "post-" + Date.now() + path.extname(file.originalname));
-  },
-});
+const storage = multer.memoryStorage();
 
 const upload = multer({ storage });
 
@@ -21,11 +14,9 @@ const upload = multer({ storage });
 router.post("/", upload.single("image"), async (req, res) => {
   try {
     const { userId, username, profilePicture, desc, tags } = req.body;
-    console.log(req.body);
-    // console.log("username = " + username);
+
     // Check if an image was uploaded
-    const imgPath = req.file ? req.file.path : null;
-    const img = imgPath ? imgPath.replace(/\\/g, "/").replace("public/assets/", "") : null;
+    const imgData = req.file ? req.file.buffer : null;
 
     // Check if tags are provided
     const parsedTags = tags ? tags.map((tag) => JSON.parse(tag)) : [];
@@ -36,7 +27,7 @@ router.post("/", upload.single("image"), async (req, res) => {
       username,
       profilePicture,
       desc,
-      img,
+      img: imgData, // Store binary image data directly
       tags: parsedTags,
     });
 
@@ -72,6 +63,7 @@ router.post("/", upload.single("image"), async (req, res) => {
     res.status(500).send("Error saving the post.");
   }
 });
+
 
 // get a post
 

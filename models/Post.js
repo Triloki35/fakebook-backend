@@ -41,7 +41,7 @@ const PostSchema = new mongoose.Schema(
       max: 500,
     },
     img: {
-      type: String,
+      type: Buffer,
     },
     likes: {
       type: Array,
@@ -51,7 +51,7 @@ const PostSchema = new mongoose.Schema(
       type: [Object],
       default: [],
     },
-    comments: [CommentSchema], // Use the CommentSchema here
+    comments: [CommentSchema],
   },
   { timestamps: true }
 );
