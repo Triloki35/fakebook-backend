@@ -20,6 +20,12 @@ const messageRoute = require("./routes/messages");
 const searchRouter = require('./routes/search');
 const mailRoute = require('./routes/mail');
 
+const corsOptions = {
+    origin: 'https://fakebook-by-triloki.netlify.app',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+  };
+
 // mogo connect
 mongoose.set('strictQuery', true);
 mongoose.connect(process.env.MONGO_URL,{
@@ -35,7 +41,7 @@ app.use("/assets", express.static(path.join(__dirname,"public/assets")));
 app.use(express.json());
 app.use(helmet());
 app.use(morgan("common"));
-app.use(cors());
+app.use(cors(corsOptions));
 app.use('/public', express.static('public'));
 
 // routes
