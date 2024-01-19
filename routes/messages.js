@@ -3,38 +3,33 @@ const Message = require("../models/Message");
 const multer = require("multer");
 const path = require("path");
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-      cb(null, "./public/assets/messages"); // Specify the destination folder for uploaded files
-    },
-    filename: (req, file, cb) => {
-      cb(null, Date.now() + path.extname(file.originalname)); // Add a timestamp to the filename to make it unique
-    },
-  });
+const storage = multer.memoryStorage();
 
-  const upload = multer({ storage: storage });
+const upload = multer({ storage: storage });
 
 // new Message
-router.post("/", upload.array("images", 5), async (req, res) => {
+router.post("/", upload.single("image"), async (req, res) => {
   try {
     const { conversationId, senderId, text } = req.body;
-    const images = req.files.map((file) => {
-      const imgPath = file.path.replace(/\\/g, "/").replace("public/assets/", "");
-      return imgPath;
-    }); // Assuming you are using multer for file uploads
+
+    let image;
+    if (req.file) {
+      image = req.file ? req.file.buffer : null;
+    }
 
     const newMessage = new Message({
       conversationId,
       senderId,
       content: {
         text,
-        images,
+        image,
       },
     });
 
     await newMessage.save();
     res.status(200).json(newMessage);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
