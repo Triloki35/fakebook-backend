@@ -21,6 +21,11 @@ router.post("/", upload.single("image"), async (req, res) => {
     // Check if tags are provided
     const parsedTags = tags ? tags.map((tag) => JSON.parse(tag)) : [];
 
+    // Check if either desc or imgData is provided
+    if (!desc && !imgData) {
+      return res.status(400).json({ error: "Either 'desc' or 'image' must be provided." });
+    }
+
     // Create a new post in your MongoDB collection
     const newPost = new Post({
       userId,
