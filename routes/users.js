@@ -7,24 +7,12 @@ const { log } = require("console");
 const router = require("express").Router();
 
 // Define storage and upload middleware for profile pictures
-const profilePictureStorage = multer.diskStorage({
-  destination: "./public/assets/person/profile-picture",
-  filename: function (req, file, cb) {
-    cb(null, "profile-" + Date.now() + path.extname(file.originalname));
-  },
-});
-
-const profilePictureUpload = multer({ storage: profilePictureStorage });
+const profilePictureStorage = multer.memoryStorage();
+const profilePictureUpload = multer({ storage : profilePictureStorage });
 
 // Define storage and upload middleware for cover pictures
-const coverPictureStorage = multer.diskStorage({
-  destination: "./public/assets/person/cover-picture",
-  filename: function (req, file, cb) {
-    cb(null, "cover-" + Date.now() + path.extname(file.originalname));
-  },
-});
-
-const coverPictureUpload = multer({ storage: coverPictureStorage });
+const coverPictureStorage = multer.memoryStorage();
+const coverPictureUpload = multer({ storage : coverPictureStorage });
 
 // change or recover user password
 
@@ -65,7 +53,6 @@ router.put("/change-password", async function (req, res) {
 
 
 // update user profile-pic
-
 router.post(
   "/uploadProfilePic",
   profilePictureUpload.single("profilePicture"),
@@ -75,22 +62,18 @@ router.post(
         return res.status(400).send("No file uploaded.");
       }
 
-      const { _id } = req.body; // Assuming _id is sent in the request body
+      const { _id } = req.body;
       if (!_id) {
         return res.status(400).send("No user ID provided.");
       }
 
-      // Construct the updated profile picture path
-      const newProfilePicture = path.posix.join(
-        "person",
-        "profile-picture",
-        req.file.filename
-      );
+      // Accessing the buffer containing the image data
+      const imgBuffer = req.file.buffer;
 
-      // Update the user's profilePicture field
+      // Updateing the user's profilePicture field with the image buffer
       const user = await User.findByIdAndUpdate(
         _id,
-        { profilePicture: newProfilePicture },
+        { $set: { profilePicture: imgBuffer } },
         { new: true }
       );
 
@@ -100,13 +83,13 @@ router.post(
 
       res.status(200).send(user);
     } catch (error) {
+      console.error(error);
       res.status(500).send("Error uploading profile picture.");
     }
   }
 );
 
 // update cover pic
-
 router.post(
   "/uploadcoverPic",
   coverPictureUpload.single("coverPicture"),
@@ -116,22 +99,18 @@ router.post(
         return res.status(400).send("No file uploaded.");
       }
 
-      const { _id } = req.body; // Assuming _id is sent in the request body
+      const { _id } = req.body;
       if (!_id) {
         return res.status(400).send("No user ID provided.");
       }
 
-      // Construct the updated cover picture path
-      const newcoverPicture = path.posix.join(
-        "person",
-        "cover-picture",
-        req.file.filename
-      );
+      // Accessing the buffer containing the image data
+      const imgBuffer = req.file.buffer;
 
-      // Update the user's coverPicture field
+      // Updateing the user's coverPicture field
       const user = await User.findByIdAndUpdate(
         _id,
-        { coverPicture: newcoverPicture },
+        {$set:{ coverPicture: imgBuffer }},
         { new: true }
       );
 

@@ -65,12 +65,10 @@ const UserSchema = new mongoose.Schema(
       min: 6,
     },
     profilePicture: {
-      type: String,
-      default: "",
+      type: Buffer,
     },
     coverPicture: {
-      type: String,
-      default: "",
+      type: Buffer,
     },
     friendRequests: [
       {
