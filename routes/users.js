@@ -8,11 +8,11 @@ const router = require("express").Router();
 
 // Define storage and upload middleware for profile pictures
 const profilePictureStorage = multer.memoryStorage();
-const profilePictureUpload = multer({ storage : profilePictureStorage });
+const profilePictureUpload = multer({ storage: profilePictureStorage });
 
 // Define storage and upload middleware for cover pictures
 const coverPictureStorage = multer.memoryStorage();
-const coverPictureUpload = multer({ storage : coverPictureStorage });
+const coverPictureUpload = multer({ storage: coverPictureStorage });
 
 // change or recover user password
 
@@ -21,13 +21,15 @@ router.put("/change-password", async function (req, res) {
 
   try {
     const user = await User.findOne({ email });
-    
+
     if (!user) {
       return res.status(404).json({ error: "User not found." });
     }
-   
+
     if (!user.emailVerified) {
-      return res.status(403).json({error : "Email is not verified. Please verify your email first."});
+      return res.status(403).json({
+        error: "Email is not verified. Please verify your email first.",
+      });
     }
 
     if (password) {
@@ -42,15 +44,20 @@ router.put("/change-password", async function (req, res) {
 
     try {
       await user.save();
-      return res.status(200).json({message : "Password has been successfully updated."});
+      return res
+        .status(200)
+        .json({ message: "Password has been successfully updated." });
     } catch (error) {
-      return res.status(500).json({ error: "Error saving user to the database." });
+      return res
+        .status(500)
+        .json({ error: "Error saving user to the database." });
     }
   } catch (error) {
-    return res.status(500).json({ error: "An error occurred while processing the request." });
+    return res
+      .status(500)
+      .json({ error: "An error occurred while processing the request." });
   }
 });
-
 
 // update user profile-pic
 router.post(
@@ -110,7 +117,7 @@ router.post(
       // Updateing the user's coverPicture field
       const user = await User.findByIdAndUpdate(
         _id,
-        {$set:{ coverPicture: imgBuffer }},
+        { $set: { coverPicture: imgBuffer } },
         { new: true }
       );
 
@@ -178,19 +185,30 @@ router.post("/updateDesc", async (req, res) => {
 
 // delete user
 
-router.delete("/:id", async function (req, res) {
-  const user = await User.findById(req.params.id, { isAdmin: 1 });
-  !user && res.status(400).json("User not Found");
+router.delete("/delete-user", async function (req, res) {
+  const { userId } = req.body;
 
-  if (req.body.id == req.params.id || user.isAdmin) {
-    try {
-      await User.deleteOne({ _id: req.body.id });
-      res.status(200).json("Account has been successfully deleted");
-    } catch (error) {
-      res.status(500).json("user not found");
+  try {
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found." });
     }
-  } else {
-    res.status(403).json("You can only delete your account");
+
+    try {
+      await user.remove();
+      return res
+        .status(200)
+        .json({ message: "User has been successfully deleted." });
+    } catch (error) {
+      return res
+        .status(500)
+        .json({ error: "Error deleting user from the database." });
+    }
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ error: "An error occurred while processing the request." });
   }
 });
 
@@ -476,7 +494,7 @@ router.get("/mutual-friends/:userId1/:userId2", async (req, res) => {
     }
 
     // mutual friends by comparing the friends arrays
-    const mutualFriends = user1.friends.filter(friendId =>
+    const mutualFriends = user1.friends.filter((friendId) =>
       user2.friends.includes(friendId)
     );
 
@@ -486,12 +504,11 @@ router.get("/mutual-friends/:userId1/:userId2", async (req, res) => {
   }
 });
 
-
 // Endpoint for searching friends
 router.get("/search-friends/:userId/:username", async (req, res) => {
   try {
     const { userId, username } = req.params;
-   
+
     // Ensure that the user exists
     const user = await User.findById(userId);
     if (!user) {
