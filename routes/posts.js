@@ -95,16 +95,26 @@ router.get("/timeline/:userId", async function (req, res) {
       .skip(skip)
       .limit(PAGE_SIZE);
 
-    const friendsPosts = await Promise.all(
-      user.friends.map((friendId) => {
-        return Post.find({ userId: friendId })
-          .sort({ createdAt: -1 })
-          .skip(skip)
-          .limit(PAGE_SIZE);
-      })
-    );
+    let friendsPosts = [];
+    
+    if (user.friends.length > 0) {
+      friendsPosts = await Promise.all(
+        user.friends.map((friendId) => {
+          return Post.find({ userId: friendId })
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(PAGE_SIZE);
+        })
+      );
+    }
 
-    const allPosts = userPost.concat(...friendsPosts);
+    let allPosts = userPost.concat(...friendsPosts);
+
+    // If no posts are available, fetch random posts
+    if (allPosts.length === 0) {
+      const randomPosts = await Post.aggregate([{ $sample: { size: PAGE_SIZE } }]);
+      allPosts = randomPosts;
+    }
 
     // Fetch user information for each post
     const postsWithUserInfo = await Promise.all(
@@ -123,6 +133,7 @@ router.get("/timeline/:userId", async function (req, res) {
     res.status(500).json(error);
   }
 });
+
 
 
 
