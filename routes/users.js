@@ -306,6 +306,7 @@ router.post("/accept-friend-request/:userId", async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+
     // Find the friend request in the friendRequests array
     const friendRequestIndex = user.friendRequests.findIndex(
       (request) => request._id === friendId
@@ -313,31 +314,48 @@ router.post("/accept-friend-request/:userId", async (req, res) => {
     if (friendRequestIndex === -1) {
       return res.status(404).json({ message: "Friend request not found" });
     }
+
     // Remove the friend request from the friendRequests array
-    user.friendRequests.splice(friendRequestIndex, 1);
+    const removedRequest = user.friendRequests.splice(friendRequestIndex, 1);
+
     // Add the friendId to the friends array
     user.friends.push(friendId);
+
     // Save the updated user data
     await user.save();
 
-    // Now, update the friend's data as well
+    // Send notification to the friend who sent the request
     const friendUser = await User.findById(friendId);
     if (!friendUser) {
       return res.status(404).json({ message: "Friend user not found" });
     }
-    // Add the userId to the friend's friends array
-    friendUser.friends.push(userId);
-    // remove user from friend sentRequest
+
+    const notification = {
+      postId: null,
+      senderId: userId,
+      receiverId: friendId,
+      senderName: user.username,
+      senderProfilePicture: user.profilePicture,
+      type: "accepted", // Notification type for friend request acceptance
+      status: false,
+    };
+
+    friendUser.notifications.push(notification);
+
+    // Remove user from friend sentRequest
     friendUser.sentRequest = friendUser.sentRequest.filter(
       (id) => id !== userId
     );
+
     // Save the updated friend user data
     await friendUser.save();
+
     res.status(200).json(user);
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });
   }
 });
+
 
 // reject request
 router.post("/reject-friend-request/:userId", async (req, res) => {
