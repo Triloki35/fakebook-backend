@@ -117,14 +117,14 @@ router.get("/timeline/:userId", async function (req, res) {
     }
 
     // Fetch user information for each post
-    const postsWithUserInfo = await Promise.all(
-      allPosts.map(async (post) => {
-        const userInfo = await User.findById(post.userId);
-        return post;
-      })
-    );
+    // const postsWithUserInfo = await Promise.all(
+    //   allPosts.map(async (post) => {
+    //     const userInfo = await User.findById(post.userId);
+    //     return post;
+    //   })
+    // );
 
-    res.status(200).json(postsWithUserInfo);
+    res.status(200).json(allPosts);
   } catch (error) {
     res.status(500).json(error);
   }
