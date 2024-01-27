@@ -90,25 +90,25 @@ router.get("/timeline/:userId", async function (req, res) {
     const page = parseInt(req.query.page) || 1;
     const skip = (page - 1) * PAGE_SIZE;
 
-    const userPost = await Post.find({ userId: user._id })
+    // Fetch user's posts
+    const userPosts = await Post.find({ userId: user._id })
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(PAGE_SIZE);
+      .limit(PAGE_SIZE)
+      .lean(); // Use lean() to convert documents to plain objects
 
+    // Fetch posts from friends
     let friendsPosts = [];
-    
     if (user.friends.length > 0) {
-      friendsPosts = await Promise.all(
-        user.friends.map((friendId) => {
-          return Post.find({ userId: friendId })
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(PAGE_SIZE);
-        })
-      );
+      friendsPosts = await Post.find({ userId: { $in: user.friends } })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(PAGE_SIZE)
+        .lean();
     }
 
-    let allPosts = userPost.concat(...friendsPosts);
+    // Combine user's posts and friends' posts
+    let allPosts = [...userPosts, ...friendsPosts];
 
     // If no posts are available, fetch random posts
     if (allPosts.length === 0) {
@@ -120,11 +120,7 @@ router.get("/timeline/:userId", async function (req, res) {
     const postsWithUserInfo = await Promise.all(
       allPosts.map(async (post) => {
         const userInfo = await User.findById(post.userId);
-        return {
-          ...post._doc,
-          username: userInfo.username,
-          profilePicture: userInfo.profilePicture,
-        };
+        return post;
       })
     );
 
