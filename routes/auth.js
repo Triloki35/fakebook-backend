@@ -76,14 +76,25 @@ router.post("/register", async (req, res) => {
 router.post("/verify-otp", async (req, res) => {
   try {
     const { email, otp } = req.body;
+    console.log("Email:", email);
+    console.log("OTP:", otp);
+
+    // Data validation
+    if (!email || !otp) {
+      return res.status(400).json({ error: "Email and OTP are required." });
+    }
+
     // Check if the email and OTP match
     const existingUser = await User.findOne({
       "otpDetails.email": email,
       "otpDetails.otp": otp,
     });
+
     if (!existingUser) {
       return res.status(401).json({ error: "Invalid OTP or email." });
     }
+
+    console.log(existingUser);
 
     // Check if the OTP has expired
     const currentTime = new Date();
@@ -95,17 +106,17 @@ router.post("/verify-otp", async (req, res) => {
 
     // Mark the email as verified and clear OTP details
     existingUser.emailVerified = true;
-    existingUser.otpDetails = undefined;
-
+    // existingUser.otpDetails = undefined;
     await existingUser.save();
 
+    console.log("Email verified successfully.");
     res.status(200).json({ message: "Email verified successfully." });
   } catch (error) {
-    res
-      .status(500)
-      .json({ error: "An error occurred while verifying the OTP." });
+    console.error("Error verifying OTP:", error);
+    res.status(500).json({ error: "An error occurred while verifying the OTP." });
   }
 });
+
 
 // *****resend-otp******
 router.post("/resend-otp", async (req, res) => {
