@@ -213,7 +213,6 @@ router.delete("/delete-user", async function (req, res) {
 });
 
 // get a user
-
 router.get("/", async function (req, res) {
   const username = req.query.username;
   const userId = req.query.userId;
@@ -228,10 +227,23 @@ router.get("/", async function (req, res) {
   }
 });
 
+// get user all friendRequests
+router.get('/friend-requests/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const user = await User.findById(userId).populate('friendRequests');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.status(200).json({ friendRequests: user.friendRequests });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 // send friend request
 router.post("/friend-request/:userId", async (req, res) => {
   try {
-    const { _id, profilePicture, username } = req.body;
+    const { _id, username } = req.body;
     const userId = req.params.userId;
 
     // Find the user by userId
@@ -256,7 +268,7 @@ router.post("/friend-request/:userId", async (req, res) => {
     // Push the friend request data into the friendRequests array
     receiver.friendRequests.push({
       _id,
-      profilePicture,
+      profilePicture: sender.profilePicture,
       username,
     });
 
@@ -346,6 +358,8 @@ router.post("/accept-friend-request/:userId", async (req, res) => {
     friendUser.sentRequest = friendUser.sentRequest.filter(
       (id) => id !== userId
     );
+
+    friendUser.friends.push(userId);
 
     // Save the updated friend user data
     await friendUser.save();
@@ -458,11 +472,18 @@ router.get("/notifications/:userId", async (req, res) => {
   try {
     const userId = req.params.userId;
     const user = await User.findById(userId);
+    
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    res.status(200).json(user.notifications);
+    const notifications = user.notifications;
+    const unreadNotifications = notifications.filter(notification => !notification.status);
+
+    res.status(200).json({
+      notifications: notifications,
+      unreadNotificationsCount: unreadNotifications.length
+    });
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error" });
   }

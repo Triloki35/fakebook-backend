@@ -15,7 +15,7 @@ const NotificationSchema = new mongoose.Schema(
       type: String,
     },
     senderProfilePicture: {
-      type: String,
+      type: Buffer,
     },
     type: {
       type: String,
@@ -72,7 +72,7 @@ const UserSchema = new mongoose.Schema(
           type: String,
         },
         profilePicture: {
-          type: String,
+          type: Buffer,
         },
         username: {
           type: String,
