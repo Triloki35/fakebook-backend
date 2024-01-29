@@ -13,7 +13,7 @@ const upload = multer({ storage });
 
 router.post("/", upload.single("image"), async (req, res) => {
   try {
-    const { userId, username, profilePicture, desc, tags } = req.body;
+    const { userId, username, desc, tags } = req.body;
 
     // Check if an image was uploaded
     const imgData = req.file ? req.file.buffer : null;
@@ -25,12 +25,15 @@ router.post("/", upload.single("image"), async (req, res) => {
     if (!desc && !imgData) {
       return res.status(400).json({ error: "Either 'desc' or 'image' must be provided." });
     }
+    
+    const user = await User.findById(userId);
+    const profilePicture = user.profilePicture;
 
     // Create a new post in your MongoDB collection
     const newPost = new Post({
       userId,
       username,
-      profilePicture,
+      profilePicture:profilePicture,
       desc,
       img: imgData, // Store binary image data directly
       tags: parsedTags,
@@ -90,46 +93,35 @@ router.get("/timeline/:userId", async function (req, res) {
     const page = parseInt(req.query.page) || 1;
     const skip = (page - 1) * PAGE_SIZE;
 
-    // Fetch user's posts
-    const userPosts = await Post.find({ userId: user._id })
+    let allPosts = [];
+  
+    const userPost = await Post.find({ userId: user._id })
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(PAGE_SIZE)
-      .lean(); // Use lean() to convert documents to plain objects
+      .limit(PAGE_SIZE);
 
-    // Fetch posts from friends
-    let friendsPosts = [];
-    if (user.friends.length > 0) {
-      friendsPosts = await Post.find({ userId: { $in: user.friends } })
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(PAGE_SIZE)
-        .lean();
-    }
+    const friendsPosts = await Promise.all(
+      user.friends.map((friendId) => {
+        return Post.find({ userId: friendId })
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(PAGE_SIZE);
+      })
+    );
 
-    // Combine user's posts and friends' posts
-    let allPosts = [...userPosts, ...friendsPosts];
+    allPosts = userPost.concat(...friendsPosts);
 
-    // If no posts are available, fetch random posts
-    if (allPosts.length === 0) {
-      const randomPosts = await Post.aggregate([{ $sample: { size: PAGE_SIZE } }]);
-      allPosts = randomPosts;
-    }
-
-    // Fetch user information for each post
-    // const postsWithUserInfo = await Promise.all(
-    //   allPosts.map(async (post) => {
-    //     const userInfo = await User.findById(post.userId);
-    //     return post;
-    //   })
-    // );
+    // If allPosts is empty, fetch random posts from the database
+    // if (allPosts.length === 0) {
+    //   const randomPosts = await Post.aggregate([{ $sample: { size: PAGE_SIZE } }]);
+    //   allPosts = randomPosts;
+    // }
 
     res.status(200).json(allPosts);
   } catch (error) {
     res.status(500).json(error);
   }
 });
-
 
 
 

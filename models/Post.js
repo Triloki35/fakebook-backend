@@ -34,7 +34,7 @@ const PostSchema = new mongoose.Schema(
       require: true,
     },
     profilePicture: {
-      type: String,
+      type: Buffer,
     },
     desc: {
       type: String,
