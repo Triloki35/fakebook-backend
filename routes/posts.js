@@ -111,11 +111,11 @@ router.get("/timeline/:userId", async function (req, res) {
 
     allPosts = userPost.concat(...friendsPosts);
 
-    // If allPosts is empty, fetch random posts from the database
-    // if (allPosts.length === 0) {
-    //   const randomPosts = await Post.aggregate([{ $sample: { size: PAGE_SIZE } }]);
-    //   allPosts = randomPosts;
-    // }
+    if (allPosts.length === 0) {
+      const randomPosts = await Post.find().skip(skip).limit(PAGE_SIZE);
+      // console.log(randomPosts);
+      allPosts = randomPosts;
+    }
 
     res.status(200).json(allPosts);
   } catch (error) {
