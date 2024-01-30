@@ -115,7 +115,7 @@ const UserSchema = new mongoose.Schema(
       enum: ['male', 'female', 'other'], 
     },
     notifications: [NotificationSchema],
-    bookmarks: [{ type: String }],
+    bookmarks: [{ type: Buffer }],
     emailVerified: {
       type: Boolean,
       default: false,
