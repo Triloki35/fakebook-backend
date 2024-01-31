@@ -88,10 +88,11 @@ router.get("/:id", async function (req, res) {
 
 router.get("/timeline/:userId", async function (req, res) {
   try {
-    const PAGE_SIZE = 5;
+    const PAGE_SIZE = 1;
+    const RANDOM_PAGE_SIZE = 5;
     const user = await User.findById(req.params.userId);
     const page = parseInt(req.query.page) || 1;
-    const skip = (page - 1) * PAGE_SIZE;
+    let skip = (page - 1) * PAGE_SIZE;
 
     let allPosts = [];
   
@@ -112,12 +113,12 @@ router.get("/timeline/:userId", async function (req, res) {
     allPosts = userPost.concat(...friendsPosts);
 
     if (allPosts.length === 0) {
-      const randomPosts = await Post.find().skip(skip).limit(PAGE_SIZE);
-      // console.log(randomPosts);
+      skip = (page - 1) * RANDOM_PAGE_SIZE;
+      const randomPosts = await Post.find().skip(skip).limit(RANDOM_PAGE_SIZE);
       allPosts = randomPosts;
     }
 
-    res.status(200).json(allPosts);
+    res.status(200).json(allPosts.slice(0, 5));
   } catch (error) {
     res.status(500).json(error);
   }
