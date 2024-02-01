@@ -228,15 +228,15 @@ router.get("/", async function (req, res) {
 });
 
 // get user all friendRequests
-router.get('/friend-requests/:userId', async (req, res) => {
+router.get("/friend-requests/:userId", async (req, res) => {
   try {
     const userId = req.params.userId;
-    const user = await User.findById(userId).populate('friendRequests');
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    const user = await User.findById(userId).populate("friendRequests");
+    if (!user) return res.status(404).json({ message: "User not found" });
     res.status(200).json({ friendRequests: user.friendRequests });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
@@ -370,7 +370,6 @@ router.post("/accept-friend-request/:userId", async (req, res) => {
   }
 });
 
-
 // reject request
 router.post("/reject-friend-request/:userId", async (req, res) => {
   try {
@@ -458,8 +457,10 @@ router.get("/friends/:userId", async (req, res) => {
 router.get("/friendsuggestion", async (req, res) => {
   try {
     const dontSuggest = req.query.dont;
-    const users = await User.find({ _id: { $nin: dontSuggest } });
-    res.json(users);
+    const users = await User.find({ _id: { $nin: dontSuggest } }).select(
+      "_id username profilePicture"
+    );
+    res.status(200).json(users);
   } catch (error) {
     res
       .status(500)
@@ -472,17 +473,19 @@ router.get("/notifications/:userId", async (req, res) => {
   try {
     const userId = req.params.userId;
     const user = await User.findById(userId);
-    
+
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
     const notifications = user.notifications;
-    const unreadNotifications = notifications.filter(notification => !notification.status);
+    const unreadNotifications = notifications.filter(
+      (notification) => !notification.status
+    );
 
     res.status(200).json({
       notifications: notifications,
-      unreadNotificationsCount: unreadNotifications.length
+      unreadNotificationsCount: unreadNotifications.length,
     });
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error" });
