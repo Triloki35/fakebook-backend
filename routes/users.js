@@ -217,7 +217,19 @@ router.get("/", async function (req, res) {
   const username = req.query.username;
   const userId = req.query.userId;
   try {
-    const projection = { password: 0, createdAt: 0, updatedAt: 0, __v: 0 };
+    const projection = {
+      password: 0,
+      createdAt: 0,
+      updatedAt: 0,
+      __v: 0,
+      email: 0,
+      friendRequests: 0,
+      notifications: 0,
+      bookmarks: 0,
+      emailVerified: 0,
+      otpDetails: 0
+    };
+    
     const user = userId
       ? await User.findById(userId, projection)
       : await User.findOne({ username: username }, projection);
