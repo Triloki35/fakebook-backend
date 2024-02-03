@@ -239,12 +239,14 @@ router.get("/", async function (req, res) {
   }
 });
 
-// get user all friendRequests
+// Get all friend requests of a user
 router.get("/friend-requests/:userId", async (req, res) => {
   try {
     const userId = req.params.userId;
-    const user = await User.findById(userId).populate("friendRequests");
-    if (!user) return res.status(404).json({ message: "User not found" });
+    const user = await User.findById(userId).populate('friendRequests');
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
     res.status(200).json({ friendRequests: user.friendRequests });
   } catch (error) {
     console.error(error);
@@ -290,7 +292,8 @@ router.post("/friend-request/:userId", async (req, res) => {
     // Save the updated receiver data
     await receiver.save();
     await sender.save();
-    res.status(200).json(sender);
+    const responseMessage = "Friend request sent successfully";
+    res.status(200).json({ sender, message: responseMessage });
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });
   }
