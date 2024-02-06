@@ -158,8 +158,8 @@ router.post("/updateAbout", async (req, res) => {
     res.status(500).send("Error updating about.");
   }
 });
-// update Desc
 
+// update Desc
 router.post("/updateDesc", async (req, res) => {
   const { desc, _id } = req.body;
 
@@ -184,7 +184,6 @@ router.post("/updateDesc", async (req, res) => {
 });
 
 // delete user
-
 router.delete("/delete-user", async function (req, res) {
   const { userId } = req.body;
 

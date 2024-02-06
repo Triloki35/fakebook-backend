@@ -1,9 +1,13 @@
 const mongoose = require("mongoose");
+const { Schema } = mongoose;
+const { ObjectId } = Schema.Types;
+const Post = require("./Post");
 
 const NotificationSchema = new mongoose.Schema(
   {
     postId: {
-      type: String,
+      type: ObjectId,
+      ref: "Post",
     },
     senderId: {
       type: String,
@@ -38,7 +42,6 @@ const OtpSchema = new mongoose.Schema({
     type: Date,
   },
 });
-
 
 const UserSchema = new mongoose.Schema(
   {
@@ -112,10 +115,13 @@ const UserSchema = new mongoose.Schema(
     },
     gender: {
       type: String,
-      enum: ['male', 'female', 'other'], 
+      enum: ["male", "female", "other"],
     },
     notifications: [NotificationSchema],
-    bookmarks: [{ type: Buffer }],
+    bookmarks: [{
+      type: ObjectId,
+      ref: "Post"
+    }],
     emailVerified: {
       type: Boolean,
       default: false,

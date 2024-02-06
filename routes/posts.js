@@ -23,9 +23,11 @@ router.post("/", upload.single("image"), async (req, res) => {
 
     // Check if either desc or imgData is provided
     if (!desc && !imgData) {
-      return res.status(400).json({ error: "Either 'desc' or 'image' must be provided." });
+      return res
+        .status(400)
+        .json({ error: "Either 'desc' or 'image' must be provided." });
     }
-    
+
     const user = await User.findById(userId);
     const profilePicture = user.profilePicture;
 
@@ -33,7 +35,7 @@ router.post("/", upload.single("image"), async (req, res) => {
     const newPost = new Post({
       userId,
       username,
-      profilePicture:profilePicture,
+      profilePicture: profilePicture,
       desc,
       img: imgData, // Store binary image data directly
       tags: parsedTags,
@@ -54,7 +56,7 @@ router.post("/", upload.single("image"), async (req, res) => {
             postId: savedPost._id,
             senderId: userId,
             senderName: username,
-            senderProfilePicture: profilePicture, 
+            senderProfilePicture: profilePicture,
             type: "tagged",
             status: false,
           };
@@ -72,20 +74,19 @@ router.post("/", upload.single("image"), async (req, res) => {
   }
 });
 
-
 // get a post
-
 router.get("/:id", async function (req, res) {
   try {
     const post = await Post.findById(req.params.id);
-    res.status(200).json(post);
+    const commentsLength = post.comments.length;
+    const postWithCommentsLength = { ...post._doc, comments: commentsLength };
+    res.status(200).json(postWithCommentsLength);
   } catch (error) {
     res.status(500).json(error);
   }
 });
 
 // get timeline posts
-
 router.get("/timeline/:userId", async function (req, res) {
   try {
     const PAGE_SIZE = 1;
@@ -95,7 +96,7 @@ router.get("/timeline/:userId", async function (req, res) {
     let skip = (page - 1) * PAGE_SIZE;
 
     let allPosts = [];
-  
+
     const userPost = await Post.find({ userId: user._id })
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -118,18 +119,23 @@ router.get("/timeline/:userId", async function (req, res) {
       allPosts = randomPosts;
     }
 
-    res.status(200).json(allPosts.slice(0, 5));
+    const postsWithCommentsLength = await Promise.all(
+      allPosts.map(async (post) => {
+        const commentsLength = post.comments.length;
+        return { ...post._doc, comments: commentsLength };
+      })
+    );
+
+    res.status(200).json(postsWithCommentsLength.slice(0, 5));
   } catch (error) {
     res.status(500).json(error);
   }
 });
 
-
-
 // get profile posts
 router.get("/profile/:username", async function (req, res) {
   try {
-    const PAGE_SIZE = 5; 
+    const PAGE_SIZE = 5;
     const user = await User.findOne({ username: req.params.username });
     const page = parseInt(req.query.page) || 1;
     const skip = (page - 1) * PAGE_SIZE;
@@ -139,25 +145,22 @@ router.get("/profile/:username", async function (req, res) {
       .skip(skip)
       .limit(PAGE_SIZE);
 
-    
-      const postsWithUserInfo = await Promise.all(
-        userPost.map(async (post) => {
-          const userInfo = await User.findById(post.userId);
-          return {
-            ...post._doc,
-            username: userInfo.username,
-            profilePicture: userInfo.profilePicture,
-          };
-        })
-      );
-    
+    const postsWithUserInfo = await Promise.all(
+      userPost.map(async (post) => {
+        const commentsLength = post.comments.length;
+        const userInfo = await User.findById(post.userId);
+        return {
+          ...post._doc,
+          comments: commentsLength,
+        };
+      })
+    );
 
     res.status(200).json(postsWithUserInfo);
   } catch (error) {
     res.status(500).json("error");
   }
 });
-
 
 //***  update post***//
 
@@ -195,7 +198,6 @@ router.delete("/:id/:userId", async function (req, res) {
 // check bookmark or not
 router.get("/check-bookmark/:userId/:postId", async function (req, res) {
   try {
-
     const userId = req.params.userId;
     const postId = req.params.postId;
 
@@ -213,29 +215,32 @@ router.get("/check-bookmark/:userId/:postId", async function (req, res) {
   }
 });
 
-
-// save post
-
-router.post("/save-post/:userId", async function (req, res) {
+// save post as bookmark
+router.post("/save-post/:userId", async (req, res) => {
   try {
-    const userId = req.params.userId;
-    const postId = req.body.postId;
+    const { userId } = req.params;
+    const { postId } = req.body;
 
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    const updateQuery = user.bookmarks.includes(postId)
-      ? { $pull: { bookmarks: postId } }
-      : { $push: { bookmarks: postId } };
+    const isBookmarked = user.bookmarks.some((bookmark) => bookmark.equals(postId));
 
-    const updatedUser = await User.findByIdAndUpdate(userId, updateQuery, { new: true });
+    if (isBookmarked) {
+      // If the post is already bookmarked, remove it from bookmarks
+      user.bookmarks = user.bookmarks.filter((bookmark) => !bookmark.equals(postId));
+    } else {
+      // If the post is not bookmarked, add it to bookmarks
+      user.bookmarks.push(postId);
+    }
 
-    res.status(200).json(updatedUser);
+    await user.save();
+    res.status(200).json(user);
   } catch (error) {
-    res.status(500).json(error);
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
-
 
 
 
@@ -269,8 +274,8 @@ router.put("/:id/like", async function (req, res) {
         const notification = {
           postId: postId,
           senderId: userId,
-          senderName: sender.username, 
-          senderProfilePicture: sender.profilePicture, 
+          senderName: sender.username,
+          senderProfilePicture: sender.profilePicture,
           type: "liked",
           status: false,
         };
@@ -295,14 +300,19 @@ router.put("/:id/like", async function (req, res) {
 
         if (postOwner) {
           postOwner.notifications = postOwner.notifications.filter(
-            (notif) => !(notif.postId === postId && notif.senderId === userId && notif.type === "like")
+            (notif) =>
+              !(
+                notif.postId === postId &&
+                notif.senderId === userId &&
+                notif.type === "like"
+              )
           );
           await postOwner.save();
         }
       }
 
       res.status(200).json({ message: "Post disliked", action: "disliked" });
-    } 
+    }
   } catch (error) {
     res.status(500).json({ message: "Internal Server Error" });
   }
@@ -310,76 +320,66 @@ router.put("/:id/like", async function (req, res) {
 
 // get all comments
 
-router.get("/comments/:postId",async function(req,res){
+router.get("/comments/:postId", async function (req, res) {
   try {
     const post = await Post.findById(req.params.postId);
     res.status(200).json(post.comments);
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error" });
   }
-})
+});
 
 // comment on post
-
 router.post("/comments/:postId", async function (req, res) {
   try {
     const postId = req.params.postId;
-    const { senderId, text, profilePicture, senderName } = req.body;
+    const { senderId, text, senderName } = req.body;
 
-    // Find the post by ID
     const post = await Post.findById(postId);
+    if (!post) return res.status(404).json({ message: "Post not found" });
 
-    if (!post) {
-      return res.status(404).json({ message: "Post not found" });
-    }
+    const sender = await User.findById(senderId);
+    if (!sender) return res.status(404).json({ message: "Sender not found" });
+    const newComment = {
+      senderId,
+      senderName,
+      text,
+      profilePicture: sender.profilePicture,
+    };
 
-    // Check if the comment sender is not the post owner
+    post.comments.push(newComment);
+    await post.save();
+
+    const postOwner = await User.findById(post.userId);
+
     if (senderId !== post.userId.toString()) {
-      // Create a new comment
-      const newComment = {
-        senderId,
-        senderName,
-        text,
-        profilePicture,
-      };
-
-      // Add the comment to the post's comments array
-      post.comments.push(newComment);
-
-      // Save the post with the new comment
-      await post.save();
-
-      // Push comment notification to the post owner
       const notification = {
         postId,
         senderId,
         senderName,
-        senderProfilePicture: profilePicture,
         type: "commented",
         status: false,
       };
-
-      const postOwner = await User.findById(post.userId);
-
-      if (postOwner) {
-        postOwner.notifications.push(notification);
-        await postOwner.save();
-      }
+      postOwner.notifications.push(notification);
+      await postOwner.save();
     }
-  
+
     res.status(201).json({ message: "Comment added successfully" });
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });
   }
 });
 
-
 // delete comment
-router.delete("/comments/:postId/:commentId", async function (req, res) {
+router.delete("/comments/:postId/:commentId/:userId", async function (req, res) {
   try {
     const postId = req.params.postId;
     const commentId = req.params.commentId;
-    const userId = req.body.userId;
+    const userId = req.params.userId;
+    
+    console.log(postId);
+    console.log(commentId);
+    console.log(userId);
 
     // Find the post by ID
     const post = await Post.findById(postId);
@@ -396,7 +396,10 @@ router.delete("/comments/:postId/:commentId", async function (req, res) {
     }
 
     // Check if the user is the post owner or the comment sender
-    if (userId === post.userId.toString() || userId === comment.senderId.toString()) {
+    if (
+      userId === post.userId||
+      userId === comment.senderId
+    ) {
       // Remove the comment from the post's comments array
       comment.remove();
 
@@ -408,14 +411,21 @@ router.delete("/comments/:postId/:commentId", async function (req, res) {
 
       if (postOwner) {
         postOwner.notifications = postOwner.notifications.filter(
-          (notif) => !(notif.postId === postId && notif.senderId === comment.senderId && notif.type === "comment")
+          (notif) =>
+            !(
+              notif.postId === postId &&
+              notif.senderId === comment.senderId &&
+              notif.type === "comment"
+            )
         );
         await postOwner.save();
       }
 
-      res.status(200).json({ message: "Comment deleted successfully" });
+      res.status(200).json(post.comments);
     } else {
-      res.status(403).json({ message: "Permission denied to delete the comment" });
+      res
+        .status(403)
+        .json({ message: "Permission denied to delete the comment" });
     }
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });
@@ -425,29 +435,30 @@ router.delete("/comments/:postId/:commentId", async function (req, res) {
 router.get("/bookmarks/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
+    const { page, limit } = req.query;
+    const pageNumber = parseInt(page) || 1;
+    const pageSize = parseInt(limit) || 3;
 
-    // Find the user by userId
     const user = await User.findById(userId);
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Get bookmarks from the user document
     const bookmarks = user.bookmarks;
 
-    // Use mongoose's $in operator to find posts with matching IDs
-    const bookmarkedPosts = await Post.find({ _id: { $in: bookmarks } });
+    const startIndex = (pageNumber - 1) * pageSize;
+    const endIndex = pageNumber * pageSize;
+
+    const bookmarkedPosts = await Post.find({ _id: { $in: bookmarks } })
+      .skip(startIndex)
+      .limit(pageSize);
 
     res.json(bookmarkedPosts);
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
-
-
-
 
 
 module.exports = router;

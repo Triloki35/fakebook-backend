@@ -10,8 +10,7 @@ const CommentSchema = new mongoose.Schema({
     required: true,
   },
   profilePicture: {
-    type: String,
-    required: true,
+    type: Buffer,
   },
   text: {
     type: String,
