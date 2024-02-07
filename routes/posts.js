@@ -357,6 +357,7 @@ router.post("/comments/:postId", async function (req, res) {
         postId,
         senderId,
         senderName,
+        senderProfilePicture: sender.profilePicture,
         type: "commented",
         status: false,
       };

@@ -506,6 +506,29 @@ router.get("/notifications/:userId", async (req, res) => {
   }
 });
 
+// get the count of unread notification
+router.get("/unread-notifications-count/:userId", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const notifications = user.notifications;
+    const unreadNotificationsCount = notifications.reduce(
+      (count, notification) => count + (notification.status ? 0 : 1),
+      0
+    );
+
+    res.status(200).json({ unreadNotificationsCount });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+
 // notifiaction-status update
 
 router.patch(
