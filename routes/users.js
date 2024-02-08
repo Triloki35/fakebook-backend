@@ -486,6 +486,9 @@ router.get("/friendsuggestion", async (req, res) => {
 router.get("/notifications/:userId", async (req, res) => {
   try {
     const userId = req.params.userId;
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = 5;
+    
     const user = await User.findById(userId);
 
     if (!user) {
@@ -493,18 +496,24 @@ router.get("/notifications/:userId", async (req, res) => {
     }
 
     const notifications = user.notifications;
-    const unreadNotifications = notifications.filter(
+    const startIndex = (page - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const paginatedNotifications = notifications.slice(startIndex, endIndex);
+    const unreadNotifications = paginatedNotifications.filter(
       (notification) => !notification.status
     );
 
     res.status(200).json({
-      notifications: notifications,
+      notifications: paginatedNotifications,
       unreadNotificationsCount: unreadNotifications.length,
+      totalPages: Math.ceil(notifications.length / pageSize),
+      currentPage: page
     });
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
 
 // get the count of unread notification
 router.get("/unread-notifications-count/:userId", async (req, res) => {
