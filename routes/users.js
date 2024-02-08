@@ -487,7 +487,7 @@ router.get("/notifications/:userId", async (req, res) => {
   try {
     const userId = req.params.userId;
     const page = parseInt(req.query.page) || 1;
-    const pageSize = 5;
+    const pageSize = 10;
     
     const user = await User.findById(userId);
 
