@@ -48,4 +48,23 @@ router.get("/search-events/:query/:country", async (req, res) => {
 
 });
 
+
+router.get("/search-news", async (req, res) => {
+  try {
+    const { query, country } = req.query;
+
+    const response = await getJson({
+      engine: "google_news",
+      q: query,
+      gl: country || "in",
+      api_key: process.env.SERPAPI_KEY,
+    });
+
+    res.status(200).send(response.news_results);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
 module.exports = router;
